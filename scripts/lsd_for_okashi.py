@@ -77,8 +77,8 @@ class LSD():
                 img = cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
                 selected_lines.append([x1, y1, x2, y2])
         selected_lines = np.array(selected_lines)
-        max_idx = selected_lines[:, 0].argmax()
-        min_idx = selected_lines[:, 0].argmin()
+        max_idx = (selected_lines[:, 0] + selected_lines[:, 3]).argmax()
+        min_idx = (selected_lines[:, 0] + selected_lines[:, 3]).argmin()
         img = cv2.line(img,
                        (selected_lines[min_idx, 0],
                         selected_lines[min_idx, 1]),
@@ -91,16 +91,21 @@ class LSD():
                        (selected_lines[max_idx, 2],
                         selected_lines[max_idx, 3]),
                        (0, 255, 0), 2)
+        print(selected_lines.shape)
+        print(selected_lines)
+        selected_lines = np.delete(selected_lines, [min_idx, max_idx], 0)
         for selected_line in selected_lines:
             line_msg.x1 = selected_line[0]
             line_msg.x2 = selected_line[1]
             line_msg.y1 = selected_line[2]
             line_msg.y2 = selected_line[3]
+        print(selected_lines.shape)
+        print(selected_lines)
         lines_msg.lines.append(line_msg)
         msg_out = self.bridge.cv2_to_imgmsg(img, "bgr8")
         msg_out.header = msg.header
         self.pub_img.publish(msg_out)
-        self.pub_lines.pUblish(lines_msg)
+        self.pub_lines.publish(lines_msg)
 
     def callback(self, msg):
         rospy.loginfo("lsd called")
