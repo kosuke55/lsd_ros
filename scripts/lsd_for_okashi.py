@@ -91,17 +91,13 @@ class LSD():
                        (selected_lines[max_idx, 2],
                         selected_lines[max_idx, 3]),
                        (0, 255, 0), 2)
-        print(selected_lines.shape)
-        print(selected_lines)
         selected_lines = np.delete(selected_lines, [min_idx, max_idx], 0)
         for selected_line in selected_lines:
             line_msg.x1 = selected_line[0]
             line_msg.x2 = selected_line[1]
             line_msg.y1 = selected_line[2]
             line_msg.y2 = selected_line[3]
-        print(selected_lines.shape)
-        print(selected_lines)
-        lines_msg.lines.append(line_msg)
+            lines_msg.lines.append(line_msg)
         msg_out = self.bridge.cv2_to_imgmsg(img, "bgr8")
         msg_out.header = msg.header
         self.pub_img.publish(msg_out)
