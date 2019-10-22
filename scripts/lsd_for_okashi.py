@@ -18,8 +18,6 @@ class LSD():
             '~input_mask', "/erode_mask_image_table/output")
         self.USE_MASK = rospy.get_param(
             '~use_mask', True)
-        # self.INPUT_IMAGE = rospy.get_param(
-        #     '~input_image', "/image_publisher_1571650592823369089/image_raw")
         self.bridge = CvBridge()
         self.pub_img = rospy.Publisher("/lsd_detected_line",
                                        Image,
@@ -67,22 +65,39 @@ class LSD():
         lines_msg = Lines()
         line_msg = Line()
         lines_msg.header = msg.header
+        xmin_x = 10**5
+        xmax_x = -10**5
         for line in lines:
             x1, y1, x2, y2 = map(int, line[0])
             v = np.array([x2-x1, y2 - y1])
             ve = v / np.linalg.norm(v)
             dot = np.dot(self.v0, ve)
-
             if ((x2-x1)**2 + (y2-y1)**2 > 1000 and
                     np.abs(dot) > 0.9 and
                     mask[y1, x1] == 255 and
                     mask[y2, x2] == 255):
+                if(min(x1, x2) < xmin_x):
+                    xmin_x = min(x1, x2)
+                    xmin_x1 = x1
+                    xmin_x2 = x2
+                    xmin_y1 = y1
+                    xmin_y2 = y2
+                if(max(x1, x2) > xmax_x):
+                    xmax_x = max(x1, x2)
+                    xmax_x1 = x1
+                    xmax_x2 = x2
+                    xmax_y1 = y1
+                    xmax_y2 = y2
                 img = cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
                 selected_lines.append([x1, y1, x2, y2])
                 line_msg.x1 = x1
                 line_msg.x2 = x2
                 line_msg.y1 = y1
                 line_msg.y2 = y2
+        img = cv2.line(img, (xmin_x1, xmin_y1),
+                       (xmin_x2, xmin_y2), (0, 255, 0), 2)
+        img = cv2.line(img, (xmax_x1, xmax_y1),
+                       (xmax_x2, xmax_y2), (0, 255, 0), 2)
         lines_msg.lines.append(line_msg)
         msg_out = self.bridge.cv2_to_imgmsg(img, "bgr8")
         msg_out.header = msg.header
