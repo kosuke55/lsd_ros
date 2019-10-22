@@ -65,8 +65,6 @@ class LSD():
         lines_msg = Lines()
         line_msg = Line()
         lines_msg.header = msg.header
-        xmin_x = 10**5
-        xmax_x = -10**5
         for line in lines:
             x1, y1, x2, y2 = map(int, line[0])
             v = np.array([x2-x1, y2 - y1])
@@ -76,33 +74,33 @@ class LSD():
                     np.abs(dot) > 0.9 and
                     mask[y1, x1] == 255 and
                     mask[y2, x2] == 255):
-                if(min(x1, x2) < xmin_x):
-                    xmin_x = min(x1, x2)
-                    xmin_x1 = x1
-                    xmin_x2 = x2
-                    xmin_y1 = y1
-                    xmin_y2 = y2
-                if(max(x1, x2) > xmax_x):
-                    xmax_x = max(x1, x2)
-                    xmax_x1 = x1
-                    xmax_x2 = x2
-                    xmax_y1 = y1
-                    xmax_y2 = y2
                 img = cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
                 selected_lines.append([x1, y1, x2, y2])
-                line_msg.x1 = x1
-                line_msg.x2 = x2
-                line_msg.y1 = y1
-                line_msg.y2 = y2
-        img = cv2.line(img, (xmin_x1, xmin_y1),
-                       (xmin_x2, xmin_y2), (0, 255, 0), 2)
-        img = cv2.line(img, (xmax_x1, xmax_y1),
-                       (xmax_x2, xmax_y2), (0, 255, 0), 2)
+        selected_lines = np.array(selected_lines)
+        max_idx = selected_lines[:, 0].argmax()
+        min_idx = selected_lines[:, 0].argmin()
+        img = cv2.line(img,
+                       (selected_lines[min_idx, 0],
+                        selected_lines[min_idx, 1]),
+                       (selected_lines[min_idx, 2],
+                        selected_lines[min_idx, 3]),
+                       (0, 255, 0), 2)
+        img = cv2.line(img,
+                       (selected_lines[max_idx, 0],
+                        selected_lines[max_idx, 1]),
+                       (selected_lines[max_idx, 2],
+                        selected_lines[max_idx, 3]),
+                       (0, 255, 0), 2)
+        for selected_line in selected_lines:
+            line_msg.x1 = selected_line[0]
+            line_msg.x2 = selected_line[1]
+            line_msg.y1 = selected_line[2]
+            line_msg.y2 = selected_line[3]
         lines_msg.lines.append(line_msg)
         msg_out = self.bridge.cv2_to_imgmsg(img, "bgr8")
         msg_out.header = msg.header
         self.pub_img.publish(msg_out)
-        self.pub_lines.publish(lines_msg)
+        self.pub_lines.pUblish(lines_msg)
 
     def callback(self, msg):
         rospy.loginfo("lsd called")
