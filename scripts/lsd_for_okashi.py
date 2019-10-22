@@ -122,11 +122,11 @@ class LSD():
                            np.mean([selected_lines[min_idx, 1],
                                     selected_lines[min_idx, 3]]))
             vec = np.array(self.cm.projectPixelTo3dRay(line_center))
-            print(vec)
-            # print(depth[0, 0])
-            # print(line_center)
-            print(depth[int(line_center[0]), int(line_center[1])])
-            vec *= depth[int(line_center[0]), int(line_center[1])] / 1000.
+            _depth = np.mean(depth[int(line_center[1]) - 10:
+                                   int(line_center[1]) + 10,
+                                   int(line_center[0]) - 10:
+                                   int(line_center[0]) + 10])
+            vec *= _depth / 1000.
             rospy.loginfo(vec)
             pose = Pose()
             pose.position.x = vec[0]
