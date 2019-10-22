@@ -47,7 +47,7 @@ class LSD():
             v = np.array([x2-x1, y2 - y1])
             ve = v / np.linalg.norm(v)
             dot = np.dot(self.v0, ve)
-            if ((x2-x1)**2 + (y2-y1)**2 > 2000 and np.abs(dot) > 0.9):
+            if ((x2-x1)**2 + (y2-y1)**2 > 1000 and np.abs(dot) > 0.9):
                 img = cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 3)
                 selected_lines.append([x1, y1, x2, y2])
                 line_msg.x1 = x1
@@ -69,8 +69,4 @@ def main(args):
 
 if __name__ == '__main__':
     main(sys.argv)
-
-
-
-
 
