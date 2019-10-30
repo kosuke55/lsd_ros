@@ -93,23 +93,25 @@ class LSD():
                     mask[y2, x2] == 255):
                 img = cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
                 selected_lines.append([x1, y1, x2, y2])
+
         selected_lines = np.array(selected_lines)
-        max_idx = (selected_lines[:, 0] + selected_lines[:, 2]).argmax()
-        min_idx = (selected_lines[:, 0] + selected_lines[:, 2]).argmin()
-        img = cv2.line(img,
-                       (selected_lines[min_idx, 0],
-                        selected_lines[min_idx, 1]),
-                       (selected_lines[min_idx, 2],
-                        selected_lines[min_idx, 3]),
-                       (0, 255, 0), 2)
-        img = cv2.line(img,
-                       (selected_lines[max_idx, 0],
-                        selected_lines[max_idx, 1]),
-                       (selected_lines[max_idx, 2],
-                        selected_lines[max_idx, 3]),
-                       (0, 255, 0), 2)
-        selected_lines = np.delete(selected_lines, [min_idx, max_idx], 0)
-        if(selected_lines.size != 0):
+        if(selected_lines.shape[0] > 2):
+            max_idx = (selected_lines[:, 0] + selected_lines[:, 2]).argmax()
+            min_idx = (selected_lines[:, 0] + selected_lines[:, 2]).argmin()
+            img = cv2.line(img,
+                           (selected_lines[min_idx, 0],
+                            selected_lines[min_idx, 1]),
+                           (selected_lines[min_idx, 2],
+                            selected_lines[min_idx, 3]),
+                           (0, 255, 0), 2)
+            img = cv2.line(img,
+                           (selected_lines[max_idx, 0],
+                            selected_lines[max_idx, 1]),
+                           (selected_lines[max_idx, 2],
+                            selected_lines[max_idx, 3]),
+                           (0, 255, 0), 2)
+            selected_lines = np.delete(selected_lines, [min_idx, max_idx], 0)
+        # if(selected_lines.size != 0):
             min_idx = (selected_lines[:, 0] + selected_lines[:, 2]).argmin()
             img = cv2.line(img,
                            (selected_lines[min_idx, 0],
