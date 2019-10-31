@@ -224,7 +224,6 @@ class LSD():
         return SetBoolResponse(True, "")
 
     def timer_callback(self, timer):
-        print("timer")
         if((self.saved_lines_msg is not None) and
            (self.saved_posearr is not None) and
            (self.saved_msg_out is not None)):
