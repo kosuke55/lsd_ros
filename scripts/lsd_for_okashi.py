@@ -30,6 +30,9 @@ class LSD():
         self.pub_img = rospy.Publisher("/lsd_detected_line",
                                        Image,
                                        queue_size=1)
+        self.pub_mask = rospy.Publisher("/lsd_mask",
+                                        Image,
+                                        queue_size=1)
         self.pub_lines = rospy.Publisher("/lines",
                                          Lines,
                                          queue_size=1)
@@ -97,7 +100,17 @@ class LSD():
     def callback_with_mask(self, msg, mask_msg, depth_msg):
         rospy.loginfo("lsd called")
         img = self.bridge.imgmsg_to_cv2(msg, "bgr8")
-        mask = self.bridge.imgmsg_to_cv2(mask_msg, "passthrough")
+        # mask = self.bridge.imgmsg_to_cv2(mask_msg, "passthrough")
+        mask = self.bridge.imgmsg_to_cv2(mask_msg, "mono8")
+        # print(np.where(mask == 255)[1].max())
+        # print(np.where(mask == 255)[1].min())
+        mask_idx_x = np.where(mask == 255)[1]
+        if(mask_idx_x.size != 0):
+            x_max = mask_idx_x.max() - 7
+            x_min = mask_idx_x.min() + 7
+            print(mask.shape)
+            mask[:, x_max:] = 0
+            mask[:, :x_min] = 0
         depth = self.bridge.imgmsg_to_cv2(depth_msg, "16UC1")
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         gray = cv2.GaussianBlur(gray, (5, 5), 5)
@@ -114,7 +127,7 @@ class LSD():
                 v = np.array([x2-x1, y2 - y1])
                 ve = v / np.linalg.norm(v)
                 dot = np.dot(self.v0, ve)
-                if ((x2-x1)**2 + (y2-y1)**2 > 1000 and
+                if ((x2-x1)**2 + (y2-y1)**2 > 500 and
                         np.abs(dot) > 0.9 and
                         mask[y1, x1] == 255 and
                         mask[y2, x2] == 255):
@@ -122,23 +135,23 @@ class LSD():
                     selected_lines.append([x1, y1, x2, y2])
 
             selected_lines = np.array(selected_lines)
-            if(selected_lines.shape[0] > 2):
-                max_idx = (selected_lines[:, 0] + selected_lines[:, 2]).argmax()
-                min_idx = (selected_lines[:, 0] + selected_lines[:, 2]).argmin()
-                img = cv2.line(img,
-                               (selected_lines[min_idx, 0],
-                                selected_lines[min_idx, 1]),
-                               (selected_lines[min_idx, 2],
-                                selected_lines[min_idx, 3]),
-                               (0, 255, 0), 2)
-                img = cv2.line(img,
-                               (selected_lines[max_idx, 0],
-                                selected_lines[max_idx, 1]),
-                               (selected_lines[max_idx, 2],
-                                selected_lines[max_idx, 3]),
-                               (0, 255, 0), 2)
-                selected_lines = np.delete(selected_lines, [min_idx, max_idx], 0)
-            # if(selected_lines.size != 0):
+            # if(selected_lines.shape[0] >= 2):
+            #     max_idx = (selected_lines[:, 0] + selected_lines[:, 2]).argmax()
+            #     min_idx = (selected_lines[:, 0] + selected_lines[:, 2]).argmin()
+            #     img = cv2.line(img,
+            #                    (selected_lines[min_idx, 0],
+            #                     selected_lines[min_idx, 1]),
+            #                    (selected_lines[min_idx, 2],
+            #                     selected_lines[min_idx, 3]),
+            #                    (0, 255, 0), 2)
+            #     img = cv2.line(img,
+            #                    (selected_lines[max_idx, 0],
+            #                     selected_lines[max_idx, 1]),
+            #                    (selected_lines[max_idx, 2],
+            #                     selected_lines[max_idx, 3]),
+            #                    (0, 255, 0), 2)
+            #     selected_lines = np.delete(selected_lines, [min_idx, max_idx], 0)
+            if(selected_lines.size != 0):
                 min_idx = (selected_lines[:, 0] + selected_lines[:, 2]).argmin()
                 img = cv2.line(img,
                                (selected_lines[min_idx, 0],
@@ -180,7 +193,13 @@ class LSD():
             self.lines_msg = lines_msg
         msg_out = self.bridge.cv2_to_imgmsg(img, "bgr8")
         msg_out.header = msg.header
+        apply_mask = img.copy()
+        apply_mask[mask == 0] = 0
+        apply_mask_msg = self.bridge.cv2_to_imgmsg(apply_mask, "bgr8")
+        # mask_msg_out = self.bridge.cv2_to_imgmsg(mask, "mono8")
         self.pub_img.publish(msg_out)
+        # self.pub_mask.publish(mask_msg_out)
+        self.pub_mask.publish(apply_mask_msg)
         self.pub_lines.publish(lines_msg)
         self.msg_out = msg_out
 

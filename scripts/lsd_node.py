@@ -74,7 +74,7 @@ class LSD():
             dot = np.dot(self.v0, ve)
 
             if ((x2-x1)**2 + (y2-y1)**2 > 1000 and
-                    np.abs(dot) > 0.9 and
+                    np.abs(dot) > 0.99 and
                     mask[y1, x1] == 255 and
                     mask[y2, x2] == 255):
                 img = cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
